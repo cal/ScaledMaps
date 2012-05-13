@@ -1,0 +1,5 @@
+name: ScaledMaps
+author: Cal
+description: Make more scales of maps available for use
+version: 0.1
+main: com.github.cal.ScaledMaps.ScaledMaps
