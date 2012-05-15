@@ -14,31 +14,47 @@ import org.bukkit.event.server.MapInitializeEvent;
 import org.bukkit.map.MapView;
 import org.bukkit.map.MapView.Scale;
 
+import java.lang.Math;
+
 public class ScaledMapsListener implements Listener {
 
     @EventHandler
     public void MapInitializeEvent(MapInitializeEvent event) {
-//      MapView map = event.getMap();
 //      Bukkit.getServer().broadcastMessage("MapInitializeEvent, map:" + map.getId());
-
-        event.getMap().setScale(Scale.CLOSEST);
+        event.getMap().setScale(newScale(event.getMap()));
     }
 
-/*
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void CraftItemEvent(CraftItemEvent event) {
-      Player player = (Player) event.getWhoClicked();
-      ItemStack item = event.getCurrentItem();
+// CLOSEST = (0), CLOSE = (1), NORMAL = (2), FAR = (3), FARTHEST = (4) 
 
-      if (item.getType() == Material.MAP && event.isShiftClick() == false) {
-        MaterialData data = item.getData();
-        player.sendMessage("CraftItemEvent: " + item.getType() + " " + event.getResult() + " " + event.isCancelled() + " data: " + data);
-      }
+    public Scale newScale(MapView newMap) {
+        Scale newScale = Scale.FARTHEST;
+        short mapId = 0;
 
-//    event.getWhoClicked().sendMessage("craft!");
-//    ((CommandSender) event.getWhoClicked()).sendMessage("craft!");
-//    ((Player) event.getWhoClicked()).sendMessage("craft!");
+        while (mapId < newMap.getId()) {
+            MapView oldMap = Bukkit.getServer().getMap(mapId);
+
+            if (oldMap.getScale().ordinal() <= newScale.ordinal()
+                && newMap.getCenterX() > (oldMap.getCenterX() - (mapWidth(oldMap.getScale()) / 2))
+                && newMap.getCenterX() < (oldMap.getCenterX() + (mapWidth(oldMap.getScale()) / 2))
+                && newMap.getCenterZ() > (oldMap.getCenterZ() - (mapWidth(oldMap.getScale()) / 2))
+                && newMap.getCenterZ() < (oldMap.getCenterZ() + (mapWidth(oldMap.getScale()) / 2))
+            ) {
+                newScale = nextScale(oldMap.getScale());
+            }
+
+            mapId++;
+        }
+
+        return newScale;
     }
-*/
 
+    public int mapWidth(Scale s) {
+        return (int) Math.pow(2, (s.ordinal() + 7));
+    }
+
+    public Scale nextScale(Scale oldScale) {
+        return oldScale.ordinal() > 0
+         ? Scale.values()[oldScale.ordinal() - 1]
+         : Scale.CLOSEST;
+     }
 }
